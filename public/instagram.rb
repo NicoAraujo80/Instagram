@@ -1,7 +1,5 @@
 require 'watir'
 
-eval File.read('personal.rb')
-
 followersAccepted = 0
 username = ARGV[0]
 password = ARGV[1]

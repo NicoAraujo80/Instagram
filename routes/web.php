@@ -11,6 +11,9 @@
 |
 */
 
+Route::get('/encrypt', 'pagesController@encrypt')->name('test');
+Route::get('/decrypt', 'pagesController@decrypt')->name('decrypt');
+
 Route::get('/', 'pagesController@index')->name('index');
 
 Route::get('/runRuby', 'pagesController@runRuby')->name('runRuby');

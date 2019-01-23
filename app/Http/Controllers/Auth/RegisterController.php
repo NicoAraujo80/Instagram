@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
+use App\Stark;
 
 class RegisterController extends Controller
 {
@@ -65,12 +66,75 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
+        $password = $data['igPassword'];
+        $method = "AES-128-CBC-HMAC-SHA256";
+        $iv = random_bytes(16);
+        $key = random_bytes(128);
+        $password = openssl_encrypt($password, $method, $key, 0, $iv);
+
+        $cookieIv = random_bytes(16);
+        $cookieKey = random_bytes(128);
+        $encryptedKey = openssl_encrypt($key, $method, $cookieKey, 0, $cookieIv);
+        $encryptedIv = openssl_encrypt($iv, $method, $cookieKey, 0, $cookieIv);
+
+
+        setcookie("tony", $encryptedKey, time() + (86400 * 30), "/");
+        setcookie("stark", $encryptedIv, time() + (86400 * 30), "/");
+        setcookie("hey", $key, time() + (86400), "/");
+        setcookie("yo", $iv, time() + (86400), "/");
+
+        $binaryIv = $this->toBinary($cookieIv);
+        $binaryKey = $this->toBinary($cookieKey);
+        dd($this->toString($binaryIv), $cookieIv, $this->toString($binaryKey), $cookieKey);
+        $stark = new Stark;
+        $stark->key = $binaryKey;
+        $stark->iv = $binaryIv;
+        $stark->user_id = $this->lastUserId();
+        $stark->save();
+
         return User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'igUsername' => $data['igUsername'],
-            'igPassword' => $data['igPassword'],
+            'igPassword' => $password,
         ]);
+
+
     }
+
+    function lastUserId()
+    {
+        $user = User::orderBy('id', 'desc')->limit(1)->get();
+        if (count($user) != 0) {
+            return $user[0]->id + 1;
+        } else {
+            return 1;
+        }
+    }
+
+    function toBinary($string)
+    {
+        $binary = "";
+
+        for ($i = 0; $i < strlen($string); $i++) {
+            $character = decbin(mb_ord(substr($string, $i, 1), 'UTF-8'));
+            $binary = $binary . $character;
+            for ($j = strlen($character); $j < 8; $j++) {
+                $binary = "0" . $binary;
+            }
+        }
+
+        return $binary;
+    }
+
+    function toString($binary)
+    {
+        $string = "";
+        for ($i = 0; $i < strlen($binary); $i += 7) {
+            $string = $string . mb_chr(bindec(substr($binary, $i, 7)), 'UTF-8');
+        }
+        return $string;
+    }
+
 }

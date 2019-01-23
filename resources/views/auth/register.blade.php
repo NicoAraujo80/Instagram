@@ -79,7 +79,7 @@
                             <label for="name" class="col-md-4 col-form-label text-md-right">{{ __('Instagram Password') }}</label>
 
                             <div class="col-md-6">
-                                <input id="name" type="text" class="form-control{{ $errors->has('igPassword') ? ' is-invalid' : '' }}" name="igPassword" value="{{ old('igPassword') }}" required autofocus>
+                                <input id="name" type="password" class="form-control{{ $errors->has('igPassword') ? ' is-invalid' : '' }}" name="igPassword" value="{{ old('igPassword') }}" required autofocus>
 
                                 @if ($errors->has('igPassword'))
                                     <span class="invalid-feedback" role="alert">
